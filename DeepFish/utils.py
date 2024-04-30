@@ -10,43 +10,54 @@ import json
 # ========================================================
 # Sampler functions
 # ========================================================
+
+###############################################################################
 class SubsetSampler(sampler.Sampler):
-    def __init__(self, data_source, indices):
-        self.data_source = data_source
-        self.indices = indices
+	
+	# -------------------------------------------------------------------------
+	def __init__(self, data_source, indices):
+		self.data_source = data_source
+		self.indices = indices
 
-    def __iter__(self):
-        return iter(self.indices)
+	# -------------------------------------------------------------------------
+	def __iter__(self):
+		return iter(self.indices)
 
-    def __len__(self):
-        return len(self.indices)
+	# -------------------------------------------------------------------------
+	def __len__(self):
+		return len(self.indices)
 
+###############################################################################
 class BalancedSampler(sampler.Sampler):
-    def __init__(self, data_source, n_samples):
-        self.data_source = data_source
-        self.n_samples = n_samples
-        self.n = len(self.data_source)
-        self.nf = (self.data_source.labels!=0).sum()
-        self.nb = (self.data_source.labels==0).sum()
+	
+	# -------------------------------------------------------------------------
+	def __init__(self, data_source, n_samples):
+		self.data_source = data_source
+		self.n_samples = n_samples
+		self.n = len(self.data_source)
+		self.nf = (self.data_source.labels!=0).sum()
+		self.nb = (self.data_source.labels==0).sum()
 
-        self.nb_ind = (self.data_source.labels==0)
-        self.nf_ind = (self.data_source.labels!=0)
-        
-    def __iter__(self):
-        p = np.ones(len(self.data_source))
-        p[self.nf_ind] =  self.nf 
-        p[self.nb_ind] =  self.nb
-        p = p / p.sum()
+		self.nb_ind = (self.data_source.labels==0)
+		self.nf_ind = (self.data_source.labels!=0)
+		
+	# -------------------------------------------------------------------------
+	def __iter__(self):
+		p = np.ones(len(self.data_source))
+		p[self.nf_ind] =  self.nf 
+		p[self.nb_ind] =  self.nb
+		p = p / p.sum()
 
-        indices = np.random.choice(np.arange(self.n), 
-                                   self.n_samples, 
-                                   replace=False, 
-                                   p=p)
-        # self.data_source.labels[indices]
-        return iter(indices)
+		indices = np.random.choice(np.arange(self.n), 
+								   self.n_samples, 
+								   replace=False, 
+								   p=p)
+		
+		return iter(indices)
 
-    def __len__(self):
-        return self.n_samples
+	# -------------------------------------------------------------------------
+	def __len__(self):
+		return self.n_samples
 
 Habitats_list = \
 ["7117",
@@ -91,8 +102,7 @@ Habitats_dict = \
 ,"9907":	"Rock shelf"
 ,"9908":	"Large boulder and pneumatophores"}
 
-
 try:
-    from torch.hub import load_state_dict_from_url
+	from torch.hub import load_state_dict_from_url
 except ImportError:
-    from torch.utils.model_zoo import load_url as load_state_dict_from_url
+	from torch.utils.model_zoo import load_url as load_state_dict_from_url

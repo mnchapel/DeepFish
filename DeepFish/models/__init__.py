@@ -1,8 +1,7 @@
 from . import lcfcn, csrnet, glance
 from . import resnet, fcn8, inception, unet, fcn8_vgg16
 
-
-
+# -----------------------------------------------------------------------------
 def get_model(model_name, exp_dict):
     if exp_dict['dataset'] == 'fish_loc':
             n_classes = 1
