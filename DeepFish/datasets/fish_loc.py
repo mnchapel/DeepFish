@@ -1,9 +1,18 @@
-import pandas as pd
+# Python
 import numpy as np
-from src import datasets
 import os
-from PIL import Image
+
+# Torch
 import torch
+
+# Pillow
+from PIL import Image
+
+# Pandas
+import pandas as pd
+
+# DeepFish
+import datasets
 
 ###############################################################################
 class FishLoc:
@@ -62,7 +71,7 @@ class FishLoc:
 		return batch
 
 # -----------------------------------------------------------------------------
-# for loc,
+# For loc
 def get_loc_data(datadir, split,  habitat=None ):
 	df = pd.read_csv(os.path.join(datadir,  '%s.csv' % split))
 	df = datasets.slice_df_reg(df, habitat)

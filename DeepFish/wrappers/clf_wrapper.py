@@ -1,16 +1,15 @@
+# Python
+import numpy as np
+
+# Torch
 import torch
 import torch.nn.functional as F
-import torchvision
-from torchvision import transforms
-import os
-import numpy as np
-import time
-from src import utils as ut
-from sklearn.metrics import confusion_matrix
-import skimage
-from src import wrappers
-from torchvision import transforms
+
+# Haven
 from haven import haven_utils as hu
+
+# DeepFish
+import wrappers
 
 ###############################################################################
 class ClfWrapper(torch.nn.Module):
@@ -55,8 +54,8 @@ class ClfWrapper(torch.nn.Module):
 	# -------------------------------------------------------------------------
 	def predict_on_batch(self, batch):
 		images = batch["images"].cuda()
-		n = images.shape[0]
 		logits = self.model.forward(images)
+
 		return (torch.sigmoid(logits) > 0.5).float()
 		
 	# -------------------------------------------------------------------------

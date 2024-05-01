@@ -1,9 +1,6 @@
 import torch
 import tqdm
-import argparse
-import pandas as pd
-import pickle, os
-import numpy as np
+import os
 from . import clf_wrapper, reg_wrapper, loc_wrapper, seg_wrapper
 
 # -----------------------------------------------------------------------------
@@ -28,7 +25,6 @@ def get_wrapper(wrapper_name, model, opt=None):
 def train_on_loader(model, train_loader):
 	model.train()
 
-	n_batches = len(train_loader)
 	train_monitor = TrainMonitor()
 	print('Training')
 	
@@ -45,7 +41,6 @@ def train_on_loader(model, train_loader):
 def val_on_loader(model, val_loader, val_monitor):
 	model.eval()
 
-	n_batches = len(val_loader)
 	print('Validating')
 	
 	for i, batch in enumerate(tqdm.tqdm(val_loader)):
@@ -58,9 +53,6 @@ def val_on_loader(model, val_loader, val_monitor):
 @torch.no_grad()
 def vis_on_loader(model, vis_loader, savedir):
 	model.eval()
-
-	n_batches = len(vis_loader)
-	split = vis_loader.dataset.split
 	
 	for i, batch in enumerate(vis_loader):
 		print("%d - visualizing %s image - savedir:%s" % (i, batch["meta"]["split"][0], savedir.split("/")[-2]))

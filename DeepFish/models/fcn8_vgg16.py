@@ -1,9 +1,9 @@
-import torch.nn as nn
-import torchvision
-import torch
-from skimage import morphology as morph
+# Python
 import numpy as np
 
+# Torch
+import torch
+import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 
 ###############################################################################
@@ -14,11 +14,12 @@ class FCN8VGG16(nn.Module):
 	def __init__(self, n_classes):
 		super().__init__()
 		self.n_classes = n_classes
-		# PREDEFINE LAYERS
+
+		# Predefine layers
 		self.pool = nn.MaxPool2d(kernel_size=2, stride=2, ceil_mode=True)
 		self.relu = nn.ReLU(inplace=True)
 	
-		# VGG16 PART
+		# VGG16 part
 		self.conv1_1 = conv3x3(3, 64, stride=1, padding=100)
 		self.conv1_2 = conv3x3(64, 64)
 		
@@ -42,18 +43,14 @@ class FCN8VGG16(nn.Module):
 		self.fc7 = nn.Conv2d(4096, 4096, kernel_size=1, stride=1, padding=0)
 		self.dropout_f7 = nn.Dropout()
 		
-		# SEMANTIC SEGMENTAION PART
-		self.scoring_layer = nn.Conv2d(4096, self.n_classes, kernel_size=1, 
-									  stride=1, padding=0)
+		# Semantic segmentation part
+		self.scoring_layer = nn.Conv2d(4096, self.n_classes, kernel_size=1, stride=1, padding=0)
 
-		self.upscore2 = nn.ConvTranspose2d(self.n_classes, self.n_classes, 
-										  kernel_size=4, stride=2, bias=False)
-		self.upscore_pool4 = nn.ConvTranspose2d(self.n_classes, self.n_classes,
-										 kernel_size=4, stride=2, bias=False)
-		self.upscore8 = nn.ConvTranspose2d(self.n_classes, self.n_classes, 
-									kernel_size=16, stride=8, bias=False)
+		self.upscore2 = nn.ConvTranspose2d(self.n_classes, self.n_classes, kernel_size=4, stride=2, bias=False)
+		self.upscore_pool4 = nn.ConvTranspose2d(self.n_classes, self.n_classes, kernel_size=4, stride=2, bias=False)
+		self.upscore8 = nn.ConvTranspose2d(self.n_classes, self.n_classes, kernel_size=16, stride=8, bias=False)
 		
-		# Initilize Weights
+		# Initialize Weights
 		self.scoring_layer.weight.data.zero_()
 		self.scoring_layer.bias.data.zero_()
 		
@@ -93,45 +90,45 @@ class FCN8VGG16(nn.Module):
 	def forward(self, x):
 		n,c,h,w = x.size()
 		
-		# VGG16 PART
-		conv1_1 =  self.relu(  self.conv1_1(x) )
-		conv1_2 =  self.relu(  self.conv1_2(conv1_1) )
+		# VGG16 part
+		conv1_1 = self.relu(self.conv1_1(x))
+		conv1_2 = self.relu(self.conv1_2(conv1_1))
 		pool1 = self.pool(conv1_2)
 		
-		conv2_1 =  self.relu(   self.conv2_1(pool1) )
-		conv2_2 =  self.relu(   self.conv2_2(conv2_1) )
+		conv2_1 = self.relu(self.conv2_1(pool1))
+		conv2_2 = self.relu(self.conv2_2(conv2_1))
 		pool2 = self.pool(conv2_2)
 		
-		conv3_1 =  self.relu(   self.conv3_1(pool2) )
-		conv3_2 =  self.relu(   self.conv3_2(conv3_1) )
-		conv3_3 =  self.relu(   self.conv3_3(conv3_2) )
+		conv3_1 = self.relu(self.conv3_1(pool2))
+		conv3_2 = self.relu(self.conv3_2(conv3_1))
+		conv3_3 = self.relu(self.conv3_3(conv3_2))
 		pool3 = self.pool(conv3_3)
 		
-		conv4_1 =  self.relu(   self.conv4_1(pool3) )
-		conv4_2 =  self.relu(   self.conv4_2(conv4_1) )
-		conv4_3 =  self.relu(   self.conv4_3(conv4_2) )
+		conv4_1 = self.relu(self.conv4_1(pool3))
+		conv4_2 = self.relu(self.conv4_2(conv4_1))
+		conv4_3 = self.relu(self.conv4_3(conv4_2))
 		pool4 = self.pool(conv4_3)
 		
-		conv5_1 =  self.relu(   self.conv5_1(pool4) )
-		conv5_2 =  self.relu(   self.conv5_2(conv5_1) )
-		conv5_3 =  self.relu(   self.conv5_3(conv5_2) )
+		conv5_1 = self.relu(self.conv5_1(pool4))
+		conv5_2 = self.relu(self.conv5_2(conv5_1))
+		conv5_3 = self.relu(self.conv5_3(conv5_2))
 		pool5 = self.pool(conv5_3)
 		
-		fc6 = self.dropout_f6( self.relu(   self.fc6(pool5) ) )
-		fc7 = self.dropout_f7( self.relu(   self.fc7(fc6) ) )
+		fc6 = self.dropout_f6(self.relu(self.fc6(pool5)))
+		fc7 = self.dropout_f7(self.relu(self.fc7(fc6)))
 		
-		# SEMANTIC SEGMENTATION PART
-		# first
-		scores = self.scoring_layer( fc7 )
+		# Semantic segmentation part
+		# First
+		scores = self.scoring_layer(fc7)
 		upscore2 = self.upscore2(scores)
 
-		# second
+		# Second
 		score_pool4 = self.score_pool4(pool4)
 		score_pool4c = score_pool4[:, :, 5:5+upscore2.size(2), 
 										 5:5+upscore2.size(3)]
 		upscore_pool4 = self.upscore_pool4(score_pool4c + upscore2)
 
-		# third
+		# Third
 		score_pool3 = self.score_pool3(pool3)
 		score_pool3c = score_pool3[:, :, 9:9+upscore_pool4.size(2), 
 										 9:9+upscore_pool4.size(3)]

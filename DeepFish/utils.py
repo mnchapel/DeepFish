@@ -1,15 +1,12 @@
-import torch
-import tqdm
-import argparse
-import pandas as pd
-import pickle, os
+# Python
 import numpy as np
-from torch.utils.data import sampler
-import json
 
-# ========================================================
+# Torch
+from torch.utils.data import sampler
+
+# =============================================================================
 # Sampler functions
-# ========================================================
+# =============================================================================
 
 ###############################################################################
 class SubsetSampler(sampler.Sampler):

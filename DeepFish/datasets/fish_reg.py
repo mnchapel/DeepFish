@@ -1,9 +1,18 @@
-import pandas as pd
+# Python
 import numpy as np
-from src import datasets
-import os 
-from PIL import Image
+import os
+
+# TorchVision
 from torchvision import transforms
+
+# Pillow
+from PIL import Image
+
+# Pandas
+import pandas as pd
+
+# DeepFish
+import datasets
 
 ###############################################################################
 class FishReg:
@@ -46,7 +55,7 @@ class FishReg:
 		return batch
 
 # -----------------------------------------------------------------------------
-# for reg,
+# For reg
 def get_reg_data(datadir, split, habitat=None ):
 	df = pd.read_csv(os.path.join(datadir,  '%s.csv' % split))
 	df = datasets.slice_df_reg(df, habitat)

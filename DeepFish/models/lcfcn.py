@@ -1,17 +1,24 @@
-import torch.nn as nn
-import torchvision
-import torch
-from skimage import morphology as morph
+# Python
 import numpy as np
-from torch import optim
+
+# Torch
+import torch
+import torch.nn as nn
 import torch.nn.functional as F
 
-import torch
-import torch.nn.functional as F
-import numpy as np
+# TorchVision
+import torchvision
+
+# Haven
+from haven import haven_utils
+
+# SciPy
+from scipy import ndimage
+
+# scikit-image
+from skimage import morphology as morph
 from skimage.morphology import watershed
 from skimage.segmentation import find_boundaries
-from scipy import ndimage
 
 ###############################################################################
 class LCFCN(nn.Module):
@@ -60,7 +67,7 @@ class LCFCN(nn.Module):
 
 		points = batch["points"].long().cuda()
 
-		points_numpy = haven_ut.t2n(points).squeeze()
+		points_numpy = haven_utils.t2n(points).squeeze()
 		blob_dict = get_blob_dict_base(self, blobs, points_numpy)
 
 		self.train()
@@ -200,8 +207,8 @@ def lc_loss_base(logits, images, points, counts, blob_dict):
 		loss += compute_split_loss(S_log, S, points, blob_dict)
 
 	# Global loss
-	S_npy = haven_ut.t2n(S.squeeze())
-	points_npy = haven_ut.t2n(points).squeeze()
+	S_npy = haven_utils.t2n(S.squeeze())
+	points_npy = haven_utils.t2n(points).squeeze()
 	for l in range(1, S.shape[1]):
 		points_class = (points_npy == l).astype(int)
 
@@ -267,8 +274,8 @@ def compute_bg_loss(S_log, bg_mask):
 # -----------------------------------------------------------------------------
 def compute_split_loss(S_log, S, points, blob_dict):
 	blobs = blob_dict["blobs"]
-	S_numpy = haven_ut.t2n(S[0])
-	points_numpy = haven_ut.t2n(points).squeeze()
+	S_numpy = haven_utils.t2n(S[0])
+	points_numpy = haven_utils.t2n(points).squeeze()
 
 	loss = 0.
 
@@ -306,7 +313,7 @@ def watersplit(_probs, _points):
 @torch.no_grad()
 def get_blob_dict(model, batch, training=False):
 	blobs = model.predict(batch, method="blobs").squeeze()
-	points = haven_ut.t2n(batch["points"]).squeeze()
+	points = haven_utils.t2n(batch["points"]).squeeze()
 
 	return get_blob_dict_base(model, blobs, points, training=training)
 
@@ -350,9 +357,9 @@ def get_blob_dict_base(model, blobs, points, training=False):
 
 			if blob_counts[i] == 1:
 				n_single += 1
-
 			else:
 				n_multi += 1
+
 			size = blob_ind.sum()
 			total_size += size
 			blobList += [{"class": l,

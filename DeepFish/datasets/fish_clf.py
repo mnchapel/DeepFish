@@ -1,9 +1,18 @@
-import pandas as pd
+# Python
 import numpy as np
-from src import datasets
 import os
-from PIL import Image
+
+# TorchVision
 from torchvision import transforms
+
+# Pillow
+from PIL import Image
+
+# Pandas
+import pandas as pd
+
+# DeepFish
+import datasets
 
 ###############################################################################
 class FishClf:
@@ -46,7 +55,7 @@ class FishClf:
 		return batch
 
 # -----------------------------------------------------------------------------
-# for clf,
+# For clf
 def get_clf_data(datadir, split,  habitat=None ):
 	df = pd.read_csv(os.path.join(datadir,'%s.csv' % split))
 	df = datasets.slice_df(df, habitat)

@@ -333,7 +333,7 @@ def create_black_image():
 	in_path = "D:/Datasets/JCU_FISH/jcu_fish_step10_1617/images/empty/"
 	out_path = "D:/Datasets/JCU_FISH/jcu_fish_step10_1617/masks/empty/"
 	for file in tqdm(listdir(in_path)):
-		img_name , ext =splitext(file)
+		img_name , ext = splitext(file)
 		image_in = in_path + file
 		image_out = out_path + img_name + '.png'
 		img = imageio.imread(image_in)

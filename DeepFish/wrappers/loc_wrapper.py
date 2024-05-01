@@ -1,21 +1,27 @@
+# Python
+import numpy as np
+
+# Torch
 import torch
 import torch.nn.functional as F
-import torchvision
-from torchvision import transforms
-import os
-import numpy as np
-import time
-from lcfcn import lcfcn_loss
-from src import utils as ut
-from sklearn.metrics import confusion_matrix
+
+# scikit-image
 import skimage
-from src import wrappers
-from skimage import morphology as morph
 from skimage.segmentation import watershed
 from skimage.segmentation import find_boundaries
+
+# SciPy
 from scipy import ndimage
+
+# LCFCN
+from lcfcn import lcfcn_loss
+
+# Haven
 from haven import haven_utils as hu
 from haven import haven_img as hi
+
+# DeepFish
+import wrappers
 
 ###############################################################################
 class LocWrapper(torch.nn.Module):
@@ -72,36 +78,33 @@ class LocWrapper(torch.nn.Module):
 	def vis_on_batch(self, batch, savedir_image):
 		self.eval()
 		images = batch["images"].cuda()
-		points = batch["points"].long().cuda()
 		logits = self.model.forward(images)
 		probs = logits.sigmoid().cpu().numpy()
 
 		blobs = lcfcn_loss.get_blobs(probs=probs)
 
-		pred_counts = (np.unique(blobs)!=0).sum()
 		pred_blobs = blobs
 		pred_probs = probs.squeeze()
 
-		# loc 
-		pred_count = pred_counts.ravel()[0]
+		# Loc
 		pred_blobs = pred_blobs.squeeze()
 		
 		img_org = hu.get_image(batch["images"],denorm="rgb")
 
-		# true points
+		# True points
 		y_list, x_list = np.where(batch["points"][0].long().numpy().squeeze())
 		img_peaks = hi.points_on_image(y_list, x_list, img_org, radius=11)
 		text = "%s ground truth" % (batch["points"].sum().item())
 		hi.text_on_image(text=text, image=img_peaks)
 
-		# pred points 
+		# Pred points 
 		pred_points = lcfcn_loss.blobs2points(pred_blobs).squeeze()
 		y_list, x_list = np.where(pred_points.squeeze())
 		img_pred = hi.mask_on_image(img_org, pred_blobs)
 		text = "%s predicted" % (len(y_list))
 		hi.text_on_image(text=text, image=img_pred)
 
-		# heatmap 
+		# Heatmap 
 		heatmap = hi.gray2cmap(pred_probs)
 		heatmap = hu.f2l(heatmap)
 		hi.text_on_image(text="lcfcn heatmap", image=heatmap)

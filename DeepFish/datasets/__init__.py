@@ -1,15 +1,9 @@
 
-# from . import trancos, fish_reg
-from . import fish_clf, fish_reg, fish_loc, fish_seg
+# TorchVision
 from torchvision import transforms
-import cv2, os
-from src import utils as ut
-import pandas as pd
-import numpy as np
 
-import pandas as pd
-import  numpy as np
-import os
+# DeepFish
+from . import fish_clf, fish_reg, fish_loc, fish_seg
 
 # -----------------------------------------------------------------------------
 def get_dataset(dataset_name, split, transform=None, datadir=None, habitat=None):
@@ -39,8 +33,7 @@ def get_dataset(dataset_name, split, transform=None, datadir=None, habitat=None)
 							  datadir=datadir+ "/Segmentation/", 
 							  habitat=habitat)
 
-	# ===========================================================
-	# tiny
+	# Tiny
 	if dataset_name == "tiny_fish_clf":
 		dataset = fish_clf.FishClf(split="train",
 							   transform=transform,
@@ -72,7 +65,7 @@ def get_dataset(dataset_name, split, transform=None, datadir=None, habitat=None)
 	return dataset
 
 # =============================================================================
-# helpers
+# Helpers
 # =============================================================================
 
 # -----------------------------------------------------------------------------

@@ -1,15 +1,15 @@
+# Python
+import numpy as np
+
+# Torch
 import torch
 import torch.nn.functional as F
-import torchvision
-from torchvision import transforms
-import os
-import numpy as np
-import time
-from src import utils as ut
-from sklearn.metrics import confusion_matrix
-import skimage
-from src import wrappers
+
+# Haven
 from haven import haven_utils as hu
+
+# DeepFish
+import wrappers
 
 ###############################################################################
 class SegWrapper(torch.nn.Module):
@@ -72,7 +72,7 @@ class SegWrapper(torch.nn.Module):
 	# -------------------------------------------------------------------------
 	def vis_on_batch(self, batch, savedir_image):
 		from skimage.segmentation import mark_boundaries
-		from skimage import data, io, segmentation, color
+		from skimage import color
 		from skimage.measure import label
 		self.eval()
 		pred_mask = self.predict_on_batch(batch)

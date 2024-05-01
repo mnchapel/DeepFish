@@ -17,8 +17,6 @@ class ResBackbone(torch.nn.Module):
 		
 		self.resnet50_32s = resnet50_32s
 
-		resnet_block_expansion_rate = resnet50_32s.layer1[0].expansion
-
 		# Freeze batch norms
 		for m in self.modules():
 			if isinstance(m, nn.BatchNorm2d):

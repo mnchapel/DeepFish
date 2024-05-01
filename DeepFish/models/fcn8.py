@@ -1,17 +1,6 @@
+# Torch
 import torch.nn as nn
 import torchvision
-import torch
-from skimage import morphology as morph
-import numpy as np
-from torch import optim
-import torch.nn.functional as F
-
-import torch
-import torch.nn.functional as F
-import numpy as np
-from skimage.morphology import watershed
-from skimage.segmentation import find_boundaries
-from scipy import ndimage
 
 ###############################################################################
 class FCN8(nn.Module):
