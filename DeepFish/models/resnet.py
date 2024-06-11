@@ -10,19 +10,22 @@ class ResNet(torch.nn.Module):
 
 	# -------------------------------------------------------------------------
 	def __init__(self, n_classes=1):
+		print("[MN] init resnet")
 		super().__init__()
-		  
-		# Features 
+		
+		# Features
 		self.n_outputs = n_outputs = 1
 		
 		# Backbone
 		self.backbone = resfcn.ResBackbone()
 		layers = list(map(int, str("100-100").split("-")))
-		layers = [401408] + layers
+		layers = [100352] + layers # 2048*7*7 = 100,352
 		n_hidden = len(layers) - 1
 
-		layerList = []      
-		for i in range(n_hidden): 
+		print(f"[MN] layers = {layers}")
+
+		layerList = []
+		for i in range(n_hidden):
 			layerList += [nn.Linear(layers[i], layers[i+1]), nn.ReLU()]
 		
 		layerList += [nn.Linear(layers[i+1], n_outputs)]
@@ -35,13 +38,15 @@ class ResNet(torch.nn.Module):
 				m.bias.requires_grad = False
 
 	# -------------------------------------------------------------------------
-	def forward(self, x):
+	def forward(self, x):		
 		n = x.shape[0]
-		logits_32s, logits_16s, logits_8s = self.backbone.extract_features(x)
+		
+		_, _, x_32s= self.backbone.extract_features(x)
 
 		# 1. Extract ResNet features
-		x = logits_32s.view(n, -1)
+		x = x_32s.view(n, -1)
 	   
 		# 2. Get MLP output
 		x = self.mlp(x)
+
 		return x 
