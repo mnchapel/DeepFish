@@ -1,5 +1,5 @@
 # DeepFish
-from . import resnet, resnet50_fcn8
+from . import resnet50_fcn8, resnet50_ffn
 
 # -----------------------------------------------------------------------------
 def get_model(model_name, exp_dict):
@@ -11,7 +11,7 @@ def get_model(model_name, exp_dict):
     if model_name == "resnet50_fcn8":
         model = resnet50_fcn8.ResNet50FCN8(n_classes)
 
-    if model_name == "resnet":
-        model = resnet.ResNet(n_classes=1)
+    if model_name == "resnet50_ffn":
+        model = resnet50_ffn.ResNet50FFN(n_classes=1)
 
     return model
