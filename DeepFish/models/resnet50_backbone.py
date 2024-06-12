@@ -1,21 +1,20 @@
-import torch 
+# Torchvision
 import torchvision
 
+# Torch
 from torch import nn
 
 ###############################################################################
-class ResBackbone(torch.nn.Module):
+class ResNet50Backbone(nn.Module):
 	
 	# -------------------------------------------------------------------------
 	def __init__(self):
 		super().__init__()
 		
-		resnet50_32s = torchvision.models.resnet50(pretrained=True)
+		self.resnet50_32s = torchvision.models.resnet50(pretrained=True)
 		
-		# Create a linear layer -- we don't need logits in this case
-		resnet50_32s.fc = torch.nn.Sequential()
-		
-		self.resnet50_32s = resnet50_32s
+		# Remove the fully connected layer
+		self.resnet50_32s.fc = nn.Sequential()
 
 		# Freeze batch norms
 		for m in self.modules():

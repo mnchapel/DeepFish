@@ -2,7 +2,7 @@
 import torch.nn as nn
 
 # DeepFish
-from . import resfcn
+from .resnet50_backbone import ResNet50Backbone
 
 ###############################################################################
 class ResNet50FCN8(nn.Module):
@@ -10,52 +10,37 @@ class ResNet50FCN8(nn.Module):
 	# -------------------------------------------------------------------------
 	def __init__(self, n_classes=2):
 		super().__init__()
-		self.n_classes = n_classes
 
-		self.backbone = resfcn.ResBackbone()
+		# ResNet50 (backbone)
+		self.backbone = ResNet50Backbone()
 
-		resnet_block_expansion_rate = self.backbone.layer1[0].expansion
+		# FCN8
+		expansion_rate = self.backbone.layer1[0].expansion
 
-
-		self.score_32s = nn.Conv2d(512 * resnet_block_expansion_rate,
-								   self.n_classes,
-								   kernel_size=1)
-
-		self.score_16s = nn.Conv2d(256 * resnet_block_expansion_rate,
-								   self.n_classes,
-								   kernel_size=1)
-
-		self.score_8s = nn.Conv2d(128 * resnet_block_expansion_rate,
-								  self.n_classes,
-								  kernel_size=1)
+		self.score_32s = nn.Conv2d(512 * expansion_rate, n_classes, kernel_size=1)
+		self.score_16s = nn.Conv2d(256 * expansion_rate, n_classes, kernel_size=1)
+		self.score_8s  = nn.Conv2d(128 * expansion_rate, n_classes, kernel_size=1)
 
 	# -------------------------------------------------------------------------
 	def forward(self, x):
-		# 1. ResNet50 features extraction
+		# 1. Extract ResNet50 features
 		x_8s, x_16s, x_32s = self.backbone.extract_features(x)
 
-		# 2. FCN8
-		logits_8s = self.score_8s(x_8s)
-		logits_16s = self.score_16s(x_16s)
+		# 2. Get FCN8 output
 		logits_32s = self.score_32s(x_32s)
+		logits_16s = self.score_16s(x_16s)
+		logits_8s = self.score_8s(x_8s)
 		
-		logits_16s_spatial_dim = logits_16s.size()[2:]
-		logits_8s_spatial_dim = logits_8s.size()[2:]
-		input_spatial_dim = x.size()[2:]
+		spatial_dim_16s = logits_16s.size()[2:]
+		spatial_dim_8s = logits_8s.size()[2:]
+		spatial_dim_x = x.size()[2:]
 
-		logits_16s += nn.functional.interpolate(logits_32s,
-												size=logits_16s_spatial_dim,
-												mode="bilinear",
-												align_corners=True)
-
-		logits_8s += nn.functional.interpolate(logits_16s,
-												size=logits_8s_spatial_dim,
-												mode="bilinear",
-												align_corners=True)
-
-		logits_upsampled = nn.functional.interpolate(logits_8s,
-													size=input_spatial_dim,
-													mode="bilinear",
-													align_corners=True)
+		logits_16s += self.upsampling(logits_32s, spatial_dim_16s)
+		logits_8s += self.upsampling(logits_16s, spatial_dim_8s)
+		logits_upsampled = self.upsampling(logits_8s, spatial_dim_x)
 
 		return logits_upsampled
+
+	# -------------------------------------------------------------------------
+	def upsampling(self, logits, spatial_dim):
+		return nn.functional.interpolate(logits, spatial_dim, mode="bilinear",	align_corners=True)

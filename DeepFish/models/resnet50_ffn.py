@@ -3,7 +3,7 @@ import torch
 from torch import nn
 
 # DeepFish
-from . import resfcn
+from .resnet50_backbone import ResNet50Backbone
 
 ###############################################################################
 class ResNet50FFN(torch.nn.Module):
@@ -16,7 +16,7 @@ class ResNet50FFN(torch.nn.Module):
 		n_outputs = 1
 		
 		# ResNet50 (backbone)
-		self.backbone = resfcn.ResBackbone()
+		self.backbone = ResNet50Backbone()
 
 		## FFN
 		layers = list(map(int, str("100-100").split("-")))
