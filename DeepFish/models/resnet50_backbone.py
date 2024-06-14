@@ -1,8 +1,8 @@
-# Torchvision
-import torchvision
-
 # Torch
 from torch import nn
+
+# Torchvision
+from torchvision.models import resnet50, ResNet50_Weights
 
 ###############################################################################
 class ResNet50Backbone(nn.Module):
@@ -11,7 +11,7 @@ class ResNet50Backbone(nn.Module):
 	def __init__(self):
 		super().__init__()
 		
-		self.resnet50_32s = torchvision.models.resnet50(pretrained=True)
+		self.resnet50_32s = resnet50(weights=ResNet50_Weights.IMAGENET1K_V1)
 		
 		# Remove the fully connected layer
 		self.resnet50_32s.fc = nn.Sequential()
