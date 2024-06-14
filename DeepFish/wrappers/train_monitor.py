@@ -8,7 +8,7 @@ class TrainMonitor:
 
 	# -------------------------------------------------------------------------
 	def add(self, score_dict):
-		for k,v in score_dict.items():
+		for k, v in score_dict.items():
 			if k not in self.score_dict_sum:
 				self.score_dict_sum[k] = score_dict[k]
 			else:
@@ -17,4 +17,4 @@ class TrainMonitor:
 
 	# -------------------------------------------------------------------------
 	def get_avg_score(self):
-		return {k:v/(self.n + 1) for k,v in self.score_dict_sum.items()}
+		return {k: v/(self.n + 1) for k, v in self.score_dict_sum.items()}

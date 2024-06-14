@@ -9,7 +9,7 @@ import torch.nn.functional as F
 from haven import haven_utils as hu
 
 # DeepFish
-import wrappers
+from .trainers import train_on_loader, val_on_loader, vis_on_loader
 
 ###############################################################################
 class RegWrapper(torch.nn.Module):
@@ -21,54 +21,64 @@ class RegWrapper(torch.nn.Module):
 		self.opt = opt
 
 	# -------------------------------------------------------------------------
+	#                                   On Loader
+	# -------------------------------------------------------------------------
+
+	# -------------------------------------------------------------------------
 	def train_on_loader(self, train_loader):
-		return wrappers.train_on_loader(self, train_loader)
+		return train_on_loader(self, train_loader)
 
 	# -------------------------------------------------------------------------
 	def val_on_loader(self, val_loader):
 		val_monitor = RegMonitor()
-		return wrappers.val_on_loader(self, val_loader, val_monitor=val_monitor)
+		return val_on_loader(self, val_loader, val_monitor=val_monitor)
 
 	# -------------------------------------------------------------------------
 	def vis_on_loader(self, vis_loader, savedir):
-		return wrappers.vis_on_loader(self, vis_loader, savedir=savedir)
+		return vis_on_loader(self, vis_loader, savedir=savedir)
+
+	# -------------------------------------------------------------------------
+	#                                   On Bacth
+	# -------------------------------------------------------------------------
 
 	# -------------------------------------------------------------------------
 	def train_on_batch(self, batch, **extras):
-		self.opt.zero_grad()
-		
+		# Data
+		images = batch["images"].cuda()
 		counts = batch["counts"].cuda()
-		pred_counts = self.model.forward(batch["images"].cuda())
 
+		# Forward + loss
+		pred_counts = self.model.forward(images)
 		loss_reg = F.mse_loss(pred_counts.squeeze(), counts.float().squeeze())
-		loss_reg.backward()
 
+		# Backward + optimizer
+		self.opt.zero_grad()
+		loss_reg.backward()
 		self.opt.step()
 
-		return {"loss_reg":loss_reg.item()}
-
-	# -------------------------------------------------------------------------
-	def predict_on_batch(self, batch):
-		images = batch["images"].cuda()
-		
-		return self.model.forward(images).round()
+		return {"loss_reg": loss_reg.item()}
 
 	# -------------------------------------------------------------------------
 	def val_on_batch(self, batch, **extras):
 		preds = self.predict_on_batch(batch)
 		val_reg = abs(preds.detach().cpu().numpy().ravel() - batch["counts"].numpy().ravel())
+
 		return val_reg
 		
 	# -------------------------------------------------------------------------
-	def vis_on_batch(self, batch, savedir_image):
-		self.eval()
-		
+	def vis_on_batch(self, batch, savedir_image):		
 		pred_counts = self.predict_on_batch(batch)
 		img = hu.get_image(batch["image_original"], denorm="rgb")
 		img = np.array(img)
 		hu.save_image(savedir_image+"/images/%d.jpg" % batch["meta"]["index"], img)
 		hu.save_json(savedir_image+"/images/%d.json" % batch["meta"]["index"],
 					{"pred_counts":float(pred_counts), "gt_counts": float(batch["counts"])})
+
+	# -------------------------------------------------------------------------
+	def predict_on_batch(self, batch):
+		images = batch["images"].cuda()
+		
+		return self.model.forward(images).round()
 
 ###############################################################################
 class RegMonitor:
