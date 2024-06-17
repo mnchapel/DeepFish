@@ -8,7 +8,7 @@ from .resnet50_backbone import ResNet50Backbone
 class ResNet50FCN8(nn.Module):
 	
 	# -------------------------------------------------------------------------
-	def __init__(self, n_classes=2):
+	def __init__(self, n_classes):
 		super().__init__()
 
 		# ResNet50 (backbone)

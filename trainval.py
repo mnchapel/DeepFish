@@ -117,10 +117,10 @@ def loadData(exp_dict):
 
 # -----------------------------------------------------------------------------
 def createModelAndOpt(exp_dict):
-	model_original = models.get_model(exp_dict["model"], exp_dict=exp_dict).cuda()
+	model_original = models.get_model(exp_dict).cuda()
 	opt = torch.optim.Adam(model_original.parameters(), lr=1e-5, weight_decay=0.0005)
 
-	model = wrappers.get_wrapper(exp_dict["wrapper"], model=model_original, opt=opt).cuda()
+	model = wrappers.get_wrapper(exp_dict["wrapper"], model_original, opt).cuda()
 
 	return model, opt
 
