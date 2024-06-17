@@ -1,106 +1,45 @@
-
-# TorchVision
-from torchvision import transforms
+# Python
+from enum import Enum
 
 # DeepFish
-from . import fish_clf, fish_reg, fish_loc, fish_seg
+from .fish_clf import FishClf
+from .fish_reg import FishReg
+from .fish_loc import FishLoc
+from .fish_seg import FishSeg
+from .helpers import get_transformer
+
+###############################################################################
+class DatasetDir(Enum):
+	CLASSIFICATION = "/Classification/"
+	LOCALIZATION = "/Localization/"
+	SEGMENTATION = "/Segmentation/"
 
 # -----------------------------------------------------------------------------
-def get_dataset(dataset_name, split, transform=None, datadir=None, habitat=None):
-	transform = get_transformer(transform, split)
+def get_dataset(split, exp_dict, datadir=None):
+	dataset_name = exp_dict["dataset"]
+	transform = get_transformer(exp_dict["transform"])
+	n_samples = None
+	habitat = None
 
-	if dataset_name == "fish_clf":
-		dataset = fish_clf.FishClf(split,
-							   transform=transform,
-							   datadir=datadir + "/Classification/", 
-							   habitat=habitat)
+	if "n_samples" in exp_dict:
+		n_samples = exp_dict["n_samples"]
+	if "habitat" in exp_dict:
+		habitat = exp_dict["habitat"]
 
-	elif dataset_name == "fish_reg":
-		dataset = fish_reg.FishReg(split,
-							   transform=transform,
-							  datadir=datadir + "/Localization/", 
-							  habitat=habitat)
+	match dataset_name:
+		case "fish_clf":
+			datadir = datadir + DatasetDir.CLASSIFICATION.value
+			fish_dataset = FishClf
+		case "fish_reg":
+			datadir = datadir + DatasetDir.LOCALIZATION.value
+			fish_dataset = FishReg
+		case "fish_loc":
+			datadir = datadir + DatasetDir.LOCALIZATION.value
+			fish_dataset = FishLoc
+		case "fish_seg":
+			datadir = datadir + DatasetDir.SEGMENTATION.value
+			fish_dataset = FishSeg
+		case _:
+			raise Exception(f"Exception in get_dataset(...) function: the dataset name {dataset_name} is not recognized. Please select fish_clf, fish_reg, fish_loc or fish_seg.")
 
-	elif dataset_name == "fish_loc":
-		dataset = fish_loc.FishLoc(split,
-							   transform=transform,
-							   datadir=datadir+ "/Localization/", 
-							   habitat=habitat)
-	
-	elif dataset_name == "fish_seg":
-		dataset = fish_seg.FishSeg(split,
-							  transform=transform,
-							  datadir=datadir+ "/Segmentation/", 
-							  habitat=habitat)
-
-	# Tiny
-	if dataset_name == "tiny_fish_clf":
-		dataset = fish_clf.FishClf(split="train",
-							   transform=transform,
-							   datadir=datadir + "/Classification/", 
-							   n_samples=10, 
-							   habitat=habitat)
-
-	elif dataset_name == "tiny_fish_reg":
-		dataset = fish_reg.FishReg(split="train",
-							   transform=transform,
-							  datadir=datadir + "/Localization/", 
-							  n_samples=10, 
-							  habitat=habitat)
-
-	elif dataset_name == "tiny_fish_loc":
-		dataset = fish_loc.FishLoc(split="train",
-							   transform=transform,
-							   datadir=datadir+ "/Localization/", 
-							   n_samples=10, 
-							   habitat=habitat)
-	
-	elif dataset_name == "tiny_fish_seg":
-		dataset = fish_seg.FishSeg(split="train",
-							  transform=transform,
-							  datadir=datadir+ "/Segmentation/", 
-							  n_samples=10,
-							  habitat=habitat)
-
-	return dataset
-
-# =============================================================================
-# Helpers
-# =============================================================================
-
-# -----------------------------------------------------------------------------
-def slice_df(df, habitat):
-	if habitat is None:
-		return df
-	
-	return df[df['ID'].apply(lambda x: True if x.split("/")[0] == habitat else False)]
-
-# -----------------------------------------------------------------------------
-def slice_df_reg(df, habitat):
-	if habitat is None:
-		return df
-	
-	return df[df['ID'].apply(lambda x: True if x.split("/")[1].split("_")[0] == habitat else False)]
-
-# -----------------------------------------------------------------------------
-def get_transformer(transform, split):
-	if transform == "resize_normalize":
-		mean = [0.485, 0.456, 0.406]
-		std = [0.229, 0.224, 0.225]
-
-		normalize_transform = transforms.Normalize(mean=mean, std=std)
-
-		return transforms.Compose(
-			[transforms.Resize((224,224)),
-			 transforms.ToTensor(),
-			 normalize_transform])
-
-	if transform == "rgb_normalize":
-		mean = [0.485, 0.456, 0.406]
-		std = [0.229, 0.224, 0.225]
-
-		normalize_transform = transforms.Normalize(mean=mean, std=std)
-
-		return transforms.Compose(
-			[transforms.ToTensor(),
-			 normalize_transform])
+	return fish_dataset(split, transform, datadir, n_samples, habitat)

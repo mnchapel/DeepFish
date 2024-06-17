@@ -12,24 +12,23 @@ from PIL import Image
 import pandas as pd
 
 # DeepFish
-import datasets
+from .helpers import slice_df
 
 ###############################################################################
 class FishClf:
 	
 	# -------------------------------------------------------------------------
 	def __init__(self, split, transform=None, datadir="", n_samples=None, habitat=None):
-
 		self.split = split
 		self.n_classes = 2
 		self.datadir = datadir
 		self.transform = transform
 
-		self.img_names, self.labels = get_clf_data(self.datadir, split, habitat=habitat)
+		self.img_names, self.labels = self.__clf_data(datadir, split, habitat)
 
 		if n_samples:
-			self.img_names = self.img_names[:n_samples] 
-			self.labels = self.labels[:n_samples] 
+			self.img_names = self.img_names[:n_samples]
+			self.labels = self.labels[:n_samples]
 
 		self.path = self.datadir
 
@@ -41,9 +40,11 @@ class FishClf:
 	def __getitem__(self, index):
 		name = self.img_names[index]
 		image_pil = Image.open(self.path + name + ".jpg")
-	   
-		image = self.transform(image_pil)
 
+		if self.transform:
+			image = self.transform(image_pil)
+		else:
+			image = image_pil
 
 		batch = {"images": image,
 				 "labels": float(self.labels[index] > 0),
@@ -54,11 +55,12 @@ class FishClf:
 
 		return batch
 
-# -----------------------------------------------------------------------------
-# For clf
-def get_clf_data(datadir, split,  habitat=None ):
-	df = pd.read_csv(os.path.join(datadir,'%s.csv' % split))
-	df = datasets.slice_df(df, habitat)
-	img_names = np.array(df['ID'])
-	labels =  np.array(df['labels'])
-	return img_names, labels
+	# -----------------------------------------------------------------------------
+	def __clf_data(self, datadir, split, habitat=None):
+		df = pd.read_csv(os.path.join(datadir, '%s.csv' % split))
+		df = slice_df(df, habitat)
+
+		img_names = np.array(df['ID'])
+		labels =  np.array(df['labels'])
+		
+		return img_names, labels

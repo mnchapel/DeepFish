@@ -12,7 +12,7 @@ from PIL import Image
 import pandas as pd
 
 # DeepFish
-import datasets
+from .helpers import slice_df_reg
 
 ###############################################################################
 class FishLoc:
@@ -25,8 +25,7 @@ class FishLoc:
 		self.datadir = datadir
 		self.transform = transform
 
-		self.img_names, self.labels, self.counts, self.points_names = get_loc_data(self.datadir, 
-		split, habitat=habitat)
+		self.img_names, self.labels, self.counts, self.points_names = self.__loc_data(datadir, split, habitat)
 
 		if n_samples:
 			self.img_names = self.img_names[:n_samples] 
@@ -43,12 +42,13 @@ class FishLoc:
 	# -------------------------------------------------------------------------
 	def __getitem__(self, index):
 		name = self.img_names[index]
-		image_pil = Image.open(self.path + "/images/"+ name + ".jpg")
-	   
-		image = self.transform(image_pil)
+		image = Image.open(self.path + "/images/"+ name + ".jpg")
+	  
+		if self.transform:
+			image = self.transform(image)
 
-		# get points
-		points = Image.open(self.path + "/masks/"+ name + ".png")#[..., np.newaxis]
+		# Get points
+		points = Image.open(self.path + "/masks/"+ name + ".png")
 		points = np.array(points).clip(0,1)
 		points = points.squeeze()
 
@@ -57,26 +57,27 @@ class FishLoc:
 			pass
 		else:
 			assert int(np.count_nonzero(points)) == counts[0]
+		
 		assert counts.item() == self.counts[index]
-
 
 		batch = {"images": image,
 				 "labels": float(self.labels[index] > 0),
 				 "counts": float(self.counts[index]),
-				"points": torch.FloatTensor(np.array(points)),
+				 "points": torch.FloatTensor(np.array(points)),
 				 "meta": {"index": index,
 						  "image_id": index,
 						  "split": self.split}}
 
 		return batch
 
-# -----------------------------------------------------------------------------
-# For loc
-def get_loc_data(datadir, split,  habitat=None ):
-	df = pd.read_csv(os.path.join(datadir,  '%s.csv' % split))
-	df = datasets.slice_df_reg(df, habitat)
-	img_names = np.array(df['ID'])
-	points_names = np.array(df['ID'])
-	counts = np.array(df['counts'])
-	labels = np.array(df['labels'])
-	return img_names,labels, counts, points_names
+	# -----------------------------------------------------------------------------
+	def __loc_data(self, datadir, split,  habitat=None):
+		df = pd.read_csv(os.path.join(datadir,  '%s.csv' % split))
+		df = slice_df_reg(df, habitat)
+		
+		img_names = np.array(df['ID'])
+		points_names = np.array(df['ID'])
+		counts = np.array(df['counts'])
+		labels = np.array(df['labels'])
+
+		return img_names, labels, counts, points_names

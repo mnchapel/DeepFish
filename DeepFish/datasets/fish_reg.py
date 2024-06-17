@@ -12,7 +12,7 @@ from PIL import Image
 import pandas as pd
 
 # DeepFish
-import datasets
+from .helpers import slice_df_reg
 
 ###############################################################################
 class FishReg:
@@ -25,7 +25,8 @@ class FishReg:
 		self.datadir = datadir
 		self.transform = transform
 
-		self.img_names, self.labels, self.counts = get_reg_data(self.datadir, split, habitat=habitat)
+		self.img_names, self.labels, self.counts = self.__reg_data(datadir, split, habitat)
+
 		if n_samples:
 			self.img_names = self.img_names[:n_samples] 
 			self.labels = self.labels[:n_samples] 
@@ -41,8 +42,11 @@ class FishReg:
 	def __getitem__(self, index):
 		name = self.img_names[index]
 		image_pil = Image.open(self.path + "/images/"+ name + ".jpg")
-	   
-		image = self.transform(image_pil)
+	
+		if self.transform:
+			image = self.transform(image_pil)
+		else:
+			image = image_pil
 
 		batch = {"images": image,
 				 "labels": float(self.labels[index] > 0),
@@ -54,14 +58,13 @@ class FishReg:
 
 		return batch
 
-# -----------------------------------------------------------------------------
-# For reg
-def get_reg_data(datadir, split, habitat=None ):
-	df = pd.read_csv(os.path.join(datadir,  '%s.csv' % split))
-	df = datasets.slice_df_reg(df, habitat)
-	img_names = np.array(df['ID'])
+	# -----------------------------------------------------------------------------
+	def __reg_data(self, datadir, split, habitat=None):
+		df = pd.read_csv(os.path.join(datadir,  '%s.csv' % split))
+		df = slice_df_reg(df, habitat)
 
-	counts = np.array(df['counts'])
-	labels = np.array(df['labels'])
+		img_names = np.array(df['ID'])
+		counts = np.array(df['counts'])
+		labels = np.array(df['labels'])
 
-	return img_names,labels, counts
+		return img_names, labels, counts
